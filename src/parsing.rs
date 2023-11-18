@@ -6,13 +6,15 @@ use crate::data::*;
 
 type Input<'a> = Peekable<Chars<'a>>;
 
-fn parse_number(input : &mut Input) -> Result<String, String> {
+fn parse_number(input : &mut impl Iterator<Item = char>) -> Result<String, String> {
     let ds = input.take_while(|x| x.is_numeric()).collect::<String>();
     Ok(ds)
 }
 
-fn parse_string(input : &mut Input, is_escape : impl Fn(char) -> bool, end : &[char]) -> Result<String, String> {
-    let mut rp = input.clone();
+fn parse_string( input : &mut impl Iterator<Item = char> 
+               , mut is_escape : impl FnMut(char) -> bool
+               , mut is_end : impl FnMut(char) -> bool) 
+               -> Result<String, String> {
 
     input.next(); // Get rid of initial quote
    
@@ -21,10 +23,10 @@ fn parse_string(input : &mut Input, is_escape : impl Fn(char) -> bool, end : &[c
     loop {
         match input.next() {
             None => { return Err("String encountered end of input".into()); },
-            Some(x) if escape.is_some() && end.contains(&x) => { ret.push(x); escape = None; }
+            Some(x) if escape.is_some() && is_end(x) => { ret.push(x); escape = None; }
             Some(x) if escape.is_some() && is_escape(x) => { ret.push(x); escape = None; }
             Some(x) if escape.is_some() => { ret.push(escape.unwrap()); escape = None; }
-            Some(x) if end.contains(&x) => { break; },
+            Some(x) if is_end(x) => { break; },
             Some(x) if is_escape(x) => { escape = Some(x); },
             Some(x) => { ret.push(x); },
         }
@@ -37,6 +39,18 @@ fn parse_string(input : &mut Input, is_escape : impl Fn(char) -> bool, end : &[c
 mod test {
     use super::*;
 
+    #[test]
+    fn parse_string_should_parse_string() {
+        let mut input = "'string another'".chars();
+        let output = parse_string(&mut input, |_| false, |x| x == '\'').unwrap();
+        assert_eq!(output, "string another");
+    }
 
+    #[test]
+    fn parse_string_should_escape() {
+        let mut input = "'string \\\\ \\' another'".chars();
+        let output = parse_string(&mut input, |x| x == '\\', |x| x == '\'').unwrap();
+        assert_eq!(output, "string \\ ' another");
+    }
 
 }
