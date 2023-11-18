@@ -1,7 +1,7 @@
 
 pub struct QuoteOpt { 
-    escape_char : char, 
-    quote_chars : Vec<char> 
+    pub escape_char : Option<char>, 
+    pub quote_chars : Vec<char> 
 }
 
 pub enum Div {
@@ -10,18 +10,18 @@ pub enum Div {
 }
 
 pub struct RecordOpt {
-    record_div : Vec<Div>,
-    field_div : Vec<Div>,
+    pub record_div : Vec<Div>,
+    pub field_div : Vec<Div>,
 }
 
 pub struct Options {
-    allow_strings : Option<QuoteOpt>,
-    record : RecordOpt,
-    preserve_spacing : bool,
+    pub allow_strings : Option<QuoteOpt>,
+    pub record : RecordOpt,
+    pub preserve_spacing : bool,
 }
 
-pub struct Record(Vec<Field>);
-pub struct Field(Vec<Value>);
+pub struct Record(pub Vec<Field>);
+pub struct Field(pub Vec<Value>);
 
 pub enum Value {
     String(String),
@@ -29,3 +29,5 @@ pub enum Value {
     Space(char),
     Punct(char),
 }
+
+// TODO constructors for options

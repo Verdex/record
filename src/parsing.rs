@@ -4,7 +4,23 @@ use std::str::Chars;
 
 use crate::data::*;
 
-//pub fn parse_records(input : &str) -> Result<
+pub fn parse_records(input : &mut impl Iterator<Item = char>, options : &Options) -> Result<Vec<Record>, String> {
+    let mut input = input.peekable();
+
+    let mut values = vec![];
+    match input.peek() {
+        None => todo!(),
+        Some(x) if x.is_numeric() => { values.push(parse_number(&mut input)); },
+        Some(x) if options.allow_strings.is_some() && options.allow_strings.as_ref().unwrap().quote_chars.contains(&x) => 
+            match options.allow_strings.as_ref().unwrap() {
+                QuoteOpt { escape_char: None, quote_chars } => { values.push(parse_string(&mut input, |_| false, |x| quote_chars.contains(&x))?); },
+                QuoteOpt { escape_char: Some(escape_char), quote_chars } => { values.push(parse_string(&mut input, |x| x == *escape_char, |x| quote_chars.contains(&x))?); },
+            },
+        _ => todo!(),
+    }
+
+    Err("todo".into())
+}
 
 fn parse_number(input : &mut impl Iterator<Item = char>) -> String {
     input.take_while(|x| x.is_numeric()).collect::<String>()
@@ -22,9 +38,9 @@ fn parse_string( input : &mut impl Iterator<Item = char>
     loop {
         match input.next() {
             None => { return Err("String encountered end of input".into()); },
-            Some(x) if escape.is_some() && is_end(x) => { ret.push(x); escape = None; }
-            Some(x) if escape.is_some() && is_escape(x) => { ret.push(x); escape = None; }
-            Some(x) if escape.is_some() => { ret.push(escape.unwrap()); ret.push(x); escape = None; }
+            Some(x) if escape.is_some() && is_end(x) => { ret.push(x); escape = None; },
+            Some(x) if escape.is_some() && is_escape(x) => { ret.push(x); escape = None; },
+            Some(x) if escape.is_some() => { ret.push(escape.unwrap()); ret.push(x); escape = None; },
             Some(x) if is_end(x) => { break; },
             Some(x) if is_escape(x) => { escape = Some(x); },
             Some(x) => { ret.push(x); },
