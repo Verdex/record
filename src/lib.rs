@@ -1,5 +1,5 @@
 
-mod data;
+mod options;
 mod parsing;
 
 #[cfg(test)]
