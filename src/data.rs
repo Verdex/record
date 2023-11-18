@@ -31,3 +31,8 @@ pub enum Value {
 }
 
 // TODO constructors for options
+// TODO make sure that the constructors enforce:
+//  * at least one record_div (field div can be empty)
+//  * non-conflicting options (for example, string shouldn't conflict with divs and divs shouldn't conflict with each other, etc)
+
+// TODO matchable implementation for record

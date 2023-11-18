@@ -4,11 +4,13 @@ use std::str::Chars;
 
 use crate::data::*;
 
+// TODO can probably have a Records interator
 pub fn parse_records(input : &mut impl Iterator<Item = char>, options : &Options) -> Result<Vec<Record>, String> {
     let mut input = input.peekable();
 
     let mut values = vec![];
     match input.peek() {
+        // TODO once you bump into field div you add to fields and reset values; same for field and records
         None => todo!(),
         Some(x) if x.is_numeric() => { values.push(parse_number(&mut input)); },
         Some(x) if options.allow_strings.is_some() && options.allow_strings.as_ref().unwrap().quote_chars.contains(&x) => 
