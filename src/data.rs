@@ -1,23 +1,23 @@
 
+// TODO see if most of these can be moved to pub(crate)
+
 pub struct QuoteOpt { 
     pub escape_char : Option<char>, 
     pub quote_chars : Vec<char> 
 }
 
-pub enum Div {
-    Char(char),
-    Chars(char, char),
-}
+pub struct Div(pub Vec<char>);
 
 pub struct RecordOpt {
     pub record_div : Vec<Div>,
-    pub field_div : Vec<Div>,
+    pub field_div : Vec<char>,
 }
 
 pub struct Options {
     pub allow_strings : Option<QuoteOpt>,
     pub record : RecordOpt,
     pub preserve_spacing : bool,
+    pub endline : char,
 }
 
 pub struct Record(pub Vec<Field>);

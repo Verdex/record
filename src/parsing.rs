@@ -8,18 +8,40 @@ use crate::data::*;
 pub fn parse_records(input : &mut impl Iterator<Item = char>, options : &Options) -> Result<Vec<Record>, String> {
     let mut input = input.peekable();
 
+    let mut records = vec![];
+    let mut fields = vec![];
     let mut values = vec![];
-    match input.peek() {
-        // TODO once you bump into field div you add to fields and reset values; same for field and records
-        None => todo!(),
-        Some(x) if options.preserve_spacing && x.is_whitespace() => { values.push(Value::Space(*x)) },
-        Some(x) if x.is_numeric() => { values.push(parse_number(&mut input)); },
-        Some(x) if options.allow_strings.is_some() && options.allow_strings.as_ref().unwrap().quote_chars.contains(&x) => 
-            match options.allow_strings.as_ref().unwrap() {
-                QuoteOpt { escape_char: None, quote_chars } => { values.push(parse_string(&mut input, |_| false, |x| quote_chars.contains(&x))?); },
-                QuoteOpt { escape_char: Some(escape_char), quote_chars } => { values.push(parse_string(&mut input, |x| x == *escape_char, |x| quote_chars.contains(&x))?); },
+
+    loop { 
+        match input.peek() {
+            None => todo!(),
+            Some(x) if options.record.record_div.contains(&x) => { 
+                if values.len() != 0 {
+                    let mut vs = std::mem::replace(&mut values, vec![]);
+                    fields.push(vs);
+                }
+                if fields.len() != 0 {
+                    let mut fs = std::mem::replace(&mut fields, vec![]);
+                    records.push(fs);
+                }
             },
-        _ => todo!(),
+            Some(x) if options.record.field_div.contains(&x) => { 
+                if values.len() != 0 {
+                    let mut vs = std::mem::replace(&mut values, vec![]);
+                    fields.push(vs);
+                }
+            },
+            Some(x) if options.preserve_spacing && x.is_whitespace() => { values.push(Value::Space(*x)) },
+            Some(x) if x.is_numeric() => { values.push(parse_number(&mut input)); },
+            Some(x) if x.is_alphabetic() || *x == '_' => { values.push(parse_symbol(&mut input)); },
+            Some(x) if options.allow_strings.is_some() && options.allow_strings.as_ref().unwrap().quote_chars.contains(&x) => 
+                match options.allow_strings.as_ref().unwrap() {
+                    QuoteOpt { escape_char: None, quote_chars } => { values.push(parse_string(&mut input, |_| false, |x| quote_chars.contains(&x))?); },
+                    QuoteOpt { escape_char: Some(escape_char), quote_chars } => { values.push(parse_string(&mut input, |x| x == *escape_char, |x| quote_chars.contains(&x))?); },
+                },
+            Some(x) => { values.push(Value::Punct(*x)); },
+            _ => todo!(),
+        }
     }
 
     Err("todo".into())
