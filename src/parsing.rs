@@ -153,23 +153,23 @@ mod test {
         let output = parse_records(&mut input, &Options::default().multi_line_records().field_dividers(&['\n'])).unwrap();
 
         assert_eq!(output.len(), 2);
-        assert_eq!(output[0].0.len(), 2);
-        assert_eq!(output[0].0[0].0.len(), 2);
-        assert_eq!(output[0].0[0].0[0], num(1));
-        assert_eq!(output[0].0[0].0[1], num(2));
+        assert_eq!(output[0].fields.len(), 2);
+        assert_eq!(output[0].fields[0].values.len(), 2);
+        assert_eq!(output[0].fields[0].values[0], num(1));
+        assert_eq!(output[0].fields[0].values[1], num(2));
 
-        assert_eq!(output[0].0[1].0.len(), 2);
-        assert_eq!(output[0].0[1].0[0], num(3));
-        assert_eq!(output[0].0[1].0[1], num(4));
+        assert_eq!(output[0].fields[1].values.len(), 2);
+        assert_eq!(output[0].fields[1].values[0], num(3));
+        assert_eq!(output[0].fields[1].values[1], num(4));
 
-        assert_eq!(output[1].0.len(), 2);
-        assert_eq!(output[1].0[0].0.len(), 2);
-        assert_eq!(output[1].0[0].0[0], num(5));
-        assert_eq!(output[1].0[0].0[1], num(6));
+        assert_eq!(output[1].fields.len(), 2);
+        assert_eq!(output[1].fields[0].values.len(), 2);
+        assert_eq!(output[1].fields[0].values[0], num(5));
+        assert_eq!(output[1].fields[0].values[1], num(6));
 
-        assert_eq!(output[1].0[1].0.len(), 2);
-        assert_eq!(output[1].0[1].0[0], num(7));
-        assert_eq!(output[1].0[1].0[1], num(8));
+        assert_eq!(output[1].fields[1].values.len(), 2);
+        assert_eq!(output[1].fields[1].values[0], num(7));
+        assert_eq!(output[1].fields[1].values[1], num(8));
     }
 
     #[test]
@@ -178,21 +178,21 @@ mod test {
         let output = parse_records(&mut input, &Options::default().single_line_records()).unwrap();
 
         assert_eq!(output.len(), 2);
-        assert_eq!(output[0].0.len(), 3);
-        assert_eq!(output[0].0[0].0.len(), 1);
-        assert_eq!(output[0].0[0].0[0], num(1));
-        assert_eq!(output[0].0[1].0.len(), 1);
-        assert_eq!(output[0].0[1].0[0], num(2));
-        assert_eq!(output[0].0[2].0.len(), 1);
-        assert_eq!(output[0].0[2].0[0], num(3));
+        assert_eq!(output[0].fields.len(), 3);
+        assert_eq!(output[0].fields[0].values.len(), 1);
+        assert_eq!(output[0].fields[0].values[0], num(1));
+        assert_eq!(output[0].fields[1].values.len(), 1);
+        assert_eq!(output[0].fields[1].values[0], num(2));
+        assert_eq!(output[0].fields[2].values.len(), 1);
+        assert_eq!(output[0].fields[2].values[0], num(3));
 
-        assert_eq!(output[1].0.len(), 3);
-        assert_eq!(output[1].0[0].0.len(), 1);
-        assert_eq!(output[1].0[0].0[0], num(4));
-        assert_eq!(output[1].0[1].0.len(), 1);
-        assert_eq!(output[1].0[1].0[0], num(5));
-        assert_eq!(output[1].0[2].0.len(), 1);
-        assert_eq!(output[1].0[2].0[0], num(6));
+        assert_eq!(output[1].fields.len(), 3);
+        assert_eq!(output[1].fields[0].values.len(), 1);
+        assert_eq!(output[1].fields[0].values[0], num(4));
+        assert_eq!(output[1].fields[1].values.len(), 1);
+        assert_eq!(output[1].fields[1].values[0], num(5));
+        assert_eq!(output[1].fields[2].values.len(), 1);
+        assert_eq!(output[1].fields[2].values[0], num(6));
     }
 
     #[test]
@@ -201,23 +201,23 @@ mod test {
         let output = parse_records(&mut input, &Options::default().single_line_records()).unwrap();
 
         assert_eq!(output.len(), 3);
-        assert_eq!(output[0].0.len(), 3);
-        assert_eq!(output[0].0[0].0.len(), 1);
-        assert_eq!(output[0].0[0].0[0], num(1));
-        assert_eq!(output[0].0[1].0.len(), 1);
-        assert_eq!(output[0].0[1].0[0], num(2));
-        assert_eq!(output[0].0[2].0.len(), 1);
-        assert_eq!(output[0].0[2].0[0], num(3));
+        assert_eq!(output[0].fields.len(), 3);
+        assert_eq!(output[0].fields[0].values.len(), 1);
+        assert_eq!(output[0].fields[0].values[0], num(1));
+        assert_eq!(output[0].fields[1].values.len(), 1);
+        assert_eq!(output[0].fields[1].values[0], num(2));
+        assert_eq!(output[0].fields[2].values.len(), 1);
+        assert_eq!(output[0].fields[2].values[0], num(3));
 
-        assert_eq!(output[1].0.len(), 0);
+        assert_eq!(output[1].fields.len(), 0);
 
-        assert_eq!(output[2].0.len(), 3);
-        assert_eq!(output[2].0[0].0.len(), 1);
-        assert_eq!(output[2].0[0].0[0], num(4));
-        assert_eq!(output[2].0[1].0.len(), 1);
-        assert_eq!(output[2].0[1].0[0], num(5));
-        assert_eq!(output[2].0[2].0.len(), 1);
-        assert_eq!(output[2].0[2].0[0], num(6));
+        assert_eq!(output[2].fields.len(), 3);
+        assert_eq!(output[2].fields[0].values.len(), 1);
+        assert_eq!(output[2].fields[0].values[0], num(4));
+        assert_eq!(output[2].fields[1].values.len(), 1);
+        assert_eq!(output[2].fields[1].values[0], num(5));
+        assert_eq!(output[2].fields[2].values.len(), 1);
+        assert_eq!(output[2].fields[2].values[0], num(6));
     }
 
     #[test]
