@@ -3,7 +3,7 @@ use std::iter::Peekable;
 
 use crate::data::*;
 
-// TODO can probably have a Records interator
+// TODO can probably have a Records iterator 
 pub fn parse_records(input : &mut impl Iterator<Item = char>, options : &Options) -> Result<Vec<Record>, String> {
     let mut input = input.peekable();
 

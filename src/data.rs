@@ -1,30 +1,29 @@
 
-// TODO see if most of these can be moved to pub(crate)
 
 #[derive(Debug)]
-pub struct QuoteOpt { 
-    pub escape_char : Option<char>, 
-    pub quote_chars : Vec<char> 
+pub(crate) struct QuoteOpt { 
+    pub(crate) escape_char : Option<char>, 
+    pub(crate) quote_chars : Vec<char> 
 }
 
 #[derive(Debug, PartialEq)]
-pub enum Div {
+pub(crate) enum Div {
     EndLine,
     BlankLine,
 }
 
 #[derive(Debug)]
-pub struct RecordOpt {
-    pub record_div : Div,
-    pub field_div : Vec<char>,
+pub(crate) struct RecordOpt {
+    pub(crate) record_div : Div,
+    pub(crate) field_div : Vec<char>,
 }
 
 #[derive(Debug)]
 pub struct Options {
-    pub strings : Option<QuoteOpt>,
-    pub record : RecordOpt,
-    pub preserve_spacing : bool,
-    pub endline : char,
+    pub(crate) strings : Option<QuoteOpt>,
+    pub(crate) record : RecordOpt,
+    pub(crate) preserve_spacing : bool,
+    pub(crate) endline : char,
 }
 
 #[derive(Debug, PartialEq)]
@@ -101,4 +100,4 @@ impl Options {
 // TODO make sure that the constructors enforce:
 //  * non-conflicting options (for example, string shouldn't conflict with divs and divs shouldn't conflict with each other, etc)
 
-// TODO matchable implementation for Vec<record>
+// TODO matchable implementation for Vec<record> (Iterator<Item = Record> ?)
