@@ -25,6 +25,7 @@ pub struct Field(pub Vec<Value>);
 
 pub enum Value {
     String(String),
+    Symbol(String),
     Number(String),
     Space(char),
     Punct(char),

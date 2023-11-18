@@ -12,6 +12,7 @@ pub fn parse_records(input : &mut impl Iterator<Item = char>, options : &Options
     match input.peek() {
         // TODO once you bump into field div you add to fields and reset values; same for field and records
         None => todo!(),
+        Some(x) if options.preserve_spacing && x.is_whitespace() => { values.push(Value::Space(*x)) },
         Some(x) if x.is_numeric() => { values.push(parse_number(&mut input)); },
         Some(x) if options.allow_strings.is_some() && options.allow_strings.as_ref().unwrap().quote_chars.contains(&x) => 
             match options.allow_strings.as_ref().unwrap() {
@@ -24,14 +25,18 @@ pub fn parse_records(input : &mut impl Iterator<Item = char>, options : &Options
     Err("todo".into())
 }
 
-fn parse_number(input : &mut impl Iterator<Item = char>) -> String {
-    input.take_while(|x| x.is_numeric()).collect::<String>()
+fn parse_number(input : &mut impl Iterator<Item = char>) -> Value {
+    Value::Number(input.take_while(|x| x.is_numeric()).collect())
+}
+
+fn parse_symbol(input : &mut impl Iterator<Item = char>) -> Value {
+    Value::Symbol(input.take_while(|x| x.is_alphanumeric() || *x == '_').collect())
 }
 
 fn parse_string( input : &mut impl Iterator<Item = char> 
                , mut is_escape : impl FnMut(char) -> bool
                , mut is_end : impl FnMut(char) -> bool) 
-               -> Result<String, String> {
+               -> Result<Value, String> {
 
     input.next(); // Get rid of initial quote
    
@@ -49,11 +54,7 @@ fn parse_string( input : &mut impl Iterator<Item = char>
         }
     }
 
-    Ok(ret.into_iter().collect())
-}
-
-fn parse_symbol(input : &mut impl Iterator<Item = char>) -> String {
-    input.take_while(|x| x.is_alphanumeric() || *x == '_').collect::<String>()
+    Ok(Value::String(ret.into_iter().collect()))
 }
 
 #[cfg(test)]
