@@ -4,6 +4,8 @@ use std::str::Chars;
 
 use crate::options::*;
 
+
+
 fn parse_number(input : &mut impl Iterator<Item = char>) -> Result<String, String> {
     let ds = input.take_while(|x| x.is_numeric()).collect::<String>();
     Ok(ds)

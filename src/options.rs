@@ -10,8 +10,8 @@ pub enum Div {
 }
 
 pub struct RecordOpt {
-    record_div : Vec<Div>
-    field_div : Vec<Div>
+    record_div : Vec<Div>,
+    field_div : Vec<Div>,
 }
 
 pub struct Options {
