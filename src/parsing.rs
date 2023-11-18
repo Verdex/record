@@ -36,7 +36,7 @@ pub fn parse_records(input : &mut impl Iterator<Item = char>, options : &Options
         match p {
             Some(x) if options.record.record_div == Div::EndLine && *x == options.endline => { 
                 if values.len() != 0 {
-                    let mut vs = std::mem::replace(&mut values, vec![]);
+                    let vs = std::mem::replace(&mut values, vec![]);
                     fields.push(field(vs));
                 }
                 let fs = std::mem::replace(&mut fields, vec![]);
