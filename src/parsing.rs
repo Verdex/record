@@ -25,7 +25,7 @@ fn parse_string( input : &mut impl Iterator<Item = char>
             None => { return Err("String encountered end of input".into()); },
             Some(x) if escape.is_some() && is_end(x) => { ret.push(x); escape = None; }
             Some(x) if escape.is_some() && is_escape(x) => { ret.push(x); escape = None; }
-            Some(x) if escape.is_some() => { ret.push(escape.unwrap()); escape = None; }
+            Some(x) if escape.is_some() => { ret.push(escape.unwrap()); ret.push(x); escape = None; }
             Some(x) if is_end(x) => { break; },
             Some(x) if is_escape(x) => { escape = Some(x); },
             Some(x) => { ret.push(x); },
@@ -51,6 +51,13 @@ mod test {
         let mut input = "'string \\\\ \\' another'".chars();
         let output = parse_string(&mut input, |x| x == '\\', |x| x == '\'').unwrap();
         assert_eq!(output, "string \\ ' another");
+    }
+
+    #[test]
+    fn parse_should_should_drop_escape_for_other() {
+        let mut input = "'string \\x another'".chars();
+        let output = parse_string(&mut input, |x| x == '\\', |x| x == '\'').unwrap();
+        assert_eq!(output, "string \\x another");
     }
 
 }
