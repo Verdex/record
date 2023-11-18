@@ -57,8 +57,8 @@ pub fn parse_records(input : &mut impl Iterator<Item = char>, options : &Options
             Some(x) if options.preserve_spacing && x.is_whitespace() => { values.push(Value::Space(*x)) },
             Some(x) if x.is_numeric() => { values.push(parse_number(&mut input)); },
             Some(x) if x.is_alphabetic() || *x == '_' => { values.push(parse_symbol(&mut input)); },
-            Some(x) if options.allow_strings.is_some() && options.allow_strings.as_ref().unwrap().quote_chars.contains(&x) => 
-                match options.allow_strings.as_ref().unwrap() {
+            Some(x) if options.strings.is_some() && options.strings.as_ref().unwrap().quote_chars.contains(&x) => 
+                match options.strings.as_ref().unwrap() {
                     QuoteOpt { escape_char: None, quote_chars } => { values.push(parse_string(&mut input, |_| false, |x| quote_chars.contains(&x))?); },
                     QuoteOpt { escape_char: Some(escape_char), quote_chars } => { values.push(parse_string(&mut input, |x| x == *escape_char, |x| quote_chars.contains(&x))?); },
                 },
