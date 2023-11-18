@@ -6,10 +6,14 @@ pub struct QuoteOpt {
     pub quote_chars : Vec<char> 
 }
 
-pub struct Div(pub Vec<char>);
+#[derive(PartialEq)]
+pub enum Div {
+    EndLine,
+    BlankLine,
+}
 
 pub struct RecordOpt {
-    pub record_div : Vec<Div>,
+    pub record_div : Div,
     pub field_div : Vec<char>,
 }
 

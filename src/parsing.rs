@@ -1,7 +1,4 @@
 
-use std::iter::Peekable;
-use std::str::Chars;
-
 use crate::data::*;
 
 // TODO can probably have a Records interator
@@ -12,24 +9,40 @@ pub fn parse_records(input : &mut impl Iterator<Item = char>, options : &Options
     let mut fields = vec![];
     let mut values = vec![];
 
+    let mut last_was_endline = false;
+
     loop { 
-        match input.peek() {
-            None => todo!(),
-            Some(x) if options.record.record_div.contains(&x) => { 
+        let p = input.peek();
+        if options.record.record_div == Div::BlankLine {
+            if p == Some(&options.endline) {
+                last_was_endline = true;
+            }
+            else if last_was_endline && p == Some(&options.endline) {
                 if values.len() != 0 {
                     let mut vs = std::mem::replace(&mut values, vec![]);
                     fields.push(vs);
                 }
-                if fields.len() != 0 {
-                    let mut fs = std::mem::replace(&mut fields, vec![]);
-                    records.push(fs);
+                let mut fs = std::mem::replace(&mut fields, vec![]);
+                records.push(fs);
+                continue;
+            }
+            else {
+                last_was_endline = false;
+            }
+        }
+        match p {
+            None => todo!(),
+            Some(x) if options.record.record_div == Div::EndLine && *x == options.endline => { 
+                if values.len() != 0 {
+                    let mut vs = std::mem::replace(&mut values, vec![]);
+                    fields.push(vs);
                 }
+                let mut fs = std::mem::replace(&mut fields, vec![]);
+                records.push(fs);
             },
             Some(x) if options.record.field_div.contains(&x) => { 
-                if values.len() != 0 {
-                    let mut vs = std::mem::replace(&mut values, vec![]);
-                    fields.push(vs);
-                }
+                let mut vs = std::mem::replace(&mut values, vec![]);
+                fields.push(vs);
             },
             Some(x) if options.preserve_spacing && x.is_whitespace() => { values.push(Value::Space(*x)) },
             Some(x) if x.is_numeric() => { values.push(parse_number(&mut input)); },
