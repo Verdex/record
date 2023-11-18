@@ -19,3 +19,13 @@ pub struct Options {
     record : RecordOpt,
     preserve_spacing : bool,
 }
+
+pub struct Record(Vec<Field>);
+pub struct Field(Vec<Value>);
+
+pub enum Value {
+    String(String),
+    Number(String),
+    Space(char),
+    Punct(char),
+}
