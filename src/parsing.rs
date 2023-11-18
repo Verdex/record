@@ -5,9 +5,9 @@ use crate::data::*;
 pub fn parse_records(input : &mut impl Iterator<Item = char>, options : &Options) -> Result<Vec<Record>, String> {
     let mut input = input.peekable();
 
-    let mut records = vec![];
-    let mut fields = vec![];
-    let mut values = vec![];
+    let mut records : Vec<Record> = vec![];
+    let mut fields : Vec<Field> = vec![];
+    let mut values : Vec<Value> = vec![];
 
     let mut last_was_endline = false;
 
@@ -20,10 +20,10 @@ pub fn parse_records(input : &mut impl Iterator<Item = char>, options : &Options
             else if last_was_endline && p == Some(&options.endline) {
                 if values.len() != 0 {
                     let mut vs = std::mem::replace(&mut values, vec![]);
-                    fields.push(vs);
+                    fields.push(Field(vs));
                 }
                 let mut fs = std::mem::replace(&mut fields, vec![]);
-                records.push(fs);
+                records.push(Record(fs));
                 continue;
             }
             else {
@@ -31,18 +31,28 @@ pub fn parse_records(input : &mut impl Iterator<Item = char>, options : &Options
             }
         }
         match p {
-            None => todo!(),
+            None => {
+                if values.len() != 0 {
+                    let mut vs = std::mem::replace(&mut values, vec![]);
+                    fields.push(Field(vs));
+                }
+                if fields.len() != 0 {
+                    let mut fs = std::mem::replace(&mut fields, vec![]);
+                    records.push(Record(fs));
+                }
+                break;
+            },
             Some(x) if options.record.record_div == Div::EndLine && *x == options.endline => { 
                 if values.len() != 0 {
                     let mut vs = std::mem::replace(&mut values, vec![]);
-                    fields.push(vs);
+                    fields.push(Field(vs));
                 }
                 let mut fs = std::mem::replace(&mut fields, vec![]);
-                records.push(fs);
+                records.push(Record(fs));
             },
             Some(x) if options.record.field_div.contains(&x) => { 
                 let mut vs = std::mem::replace(&mut values, vec![]);
-                fields.push(vs);
+                fields.push(Field(vs));
             },
             Some(x) if options.preserve_spacing && x.is_whitespace() => { values.push(Value::Space(*x)) },
             Some(x) if x.is_numeric() => { values.push(parse_number(&mut input)); },
@@ -53,11 +63,10 @@ pub fn parse_records(input : &mut impl Iterator<Item = char>, options : &Options
                     QuoteOpt { escape_char: Some(escape_char), quote_chars } => { values.push(parse_string(&mut input, |x| x == *escape_char, |x| quote_chars.contains(&x))?); },
                 },
             Some(x) => { values.push(Value::Punct(*x)); },
-            _ => todo!(),
         }
     }
 
-    Err("todo".into())
+    Ok(records)
 }
 
 fn parse_number(input : &mut impl Iterator<Item = char>) -> Value {
@@ -95,6 +104,19 @@ fn parse_string( input : &mut impl Iterator<Item = char>
 #[cfg(test)]
 mod test {
     use super::*;
+
+    // TODO
+    // single line records with blank lines
+    // multi line records
+    // multiple blank lines
+    // space elements
+    //  end of stream without record div
+    // end of stream with record div
+
+    #[test]
+    fn parse_records_should_parse_single_line_records() {
+
+    }
 
     #[test]
     fn parse_string_should_parse_string() {
