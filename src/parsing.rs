@@ -2,13 +2,12 @@
 use std::iter::Peekable;
 use std::str::Chars;
 
-use crate::options::*;
+use crate::data::*;
 
+//pub fn parse_records(input : &str) -> Result<
 
-
-fn parse_number(input : &mut impl Iterator<Item = char>) -> Result<String, String> {
-    let ds = input.take_while(|x| x.is_numeric()).collect::<String>();
-    Ok(ds)
+fn parse_number(input : &mut impl Iterator<Item = char>) -> String {
+    input.take_while(|x| x.is_numeric()).collect::<String>()
 }
 
 fn parse_string( input : &mut impl Iterator<Item = char> 
@@ -35,9 +34,8 @@ fn parse_string( input : &mut impl Iterator<Item = char>
     Ok(ret.into_iter().collect())
 }
 
-fn parse_symbol(input : &mut impl Iterator<Item = char>) -> Result<String, String> {
-    let sym = input.take_while(|x| x.is_alphanumeric() || *x == '_').collect::<String>();
-    Ok(sym)
+fn parse_symbol(input : &mut impl Iterator<Item = char>) -> String {
+    input.take_while(|x| x.is_alphanumeric() || *x == '_').collect::<String>()
 }
 
 #[cfg(test)]
