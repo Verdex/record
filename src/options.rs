@@ -16,4 +16,6 @@ pub struct RecordOpt {
 
 pub struct Options {
     allow_strings : Option<QuoteOpt>,
+    record : RecordOpt,
+    preserve_spacing : bool,
 }
