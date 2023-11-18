@@ -115,7 +115,8 @@ mod test {
 
     #[test]
     fn parse_records_should_parse_single_line_records() {
-
+        let mut input = "1,2,3\n4,5,6".chars();
+        let output = parse_records(&mut input, Options { });
     }
 
     #[test]
