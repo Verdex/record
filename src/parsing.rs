@@ -1,4 +1,6 @@
 
+use std::iter::Peekable;
+
 use crate::data::*;
 
 // TODO can probably have a Records interator
@@ -14,17 +16,18 @@ pub fn parse_records(input : &mut impl Iterator<Item = char>, options : &Options
     loop { 
         let p = input.peek();
         if options.record.record_div == Div::BlankLine {
-            if p == Some(&options.endline) {
-                last_was_endline = true;
-            }
-            else if last_was_endline && p == Some(&options.endline) {
+            if last_was_endline && p == Some(&options.endline) {
                 if values.len() != 0 {
-                    let mut vs = std::mem::replace(&mut values, vec![]);
+                    let vs = std::mem::replace(&mut values, vec![]);
                     fields.push(Field(vs));
                 }
-                let mut fs = std::mem::replace(&mut fields, vec![]);
+                let fs = std::mem::replace(&mut fields, vec![]);
                 records.push(Record(fs));
+                input.next();
                 continue;
+            }
+            else if p == Some(&options.endline) {
+                last_was_endline = true;
             }
             else {
                 last_was_endline = false;
@@ -36,14 +39,17 @@ pub fn parse_records(input : &mut impl Iterator<Item = char>, options : &Options
                     let mut vs = std::mem::replace(&mut values, vec![]);
                     fields.push(Field(vs));
                 }
-                let mut fs = std::mem::replace(&mut fields, vec![]);
+                let fs = std::mem::replace(&mut fields, vec![]);
                 records.push(Record(fs));
+                input.next();
             },
             Some(x) if options.record.field_div.contains(&x) => { 
-                let mut vs = std::mem::replace(&mut values, vec![]);
+                let vs = std::mem::replace(&mut values, vec![]);
                 fields.push(Field(vs));
+                input.next();
             },
-            Some(x) if options.preserve_spacing && x.is_whitespace() => { values.push(Value::Space(*x)) },
+            Some(x) if options.preserve_spacing && x.is_whitespace() => { values.push(Value::Space(*x)); input.next(); },
+            Some(x) if x.is_whitespace() => { input.next(); },
             Some(x) if x.is_numeric() => { values.push(parse_number(&mut input)); },
             Some(x) if x.is_alphabetic() || *x == '_' => { values.push(parse_symbol(&mut input)); },
             Some(x) if options.strings.is_some() && options.strings.as_ref().unwrap().quote_chars.contains(&x) => 
@@ -51,14 +57,14 @@ pub fn parse_records(input : &mut impl Iterator<Item = char>, options : &Options
                     QuoteOpt { escape_char: None, quote_chars } => { values.push(parse_string(&mut input, |_| false, |x| quote_chars.contains(&x))?); },
                     QuoteOpt { escape_char: Some(escape_char), quote_chars } => { values.push(parse_string(&mut input, |x| x == *escape_char, |x| quote_chars.contains(&x))?); },
                 },
-            Some(x) => { values.push(Value::Punct(*x)); },
+            Some(x) => { values.push(Value::Punct(*x)); input.next(); },
             None => {
                 if values.len() != 0 {
-                    let mut vs = std::mem::replace(&mut values, vec![]);
+                    let vs = std::mem::replace(&mut values, vec![]);
                     fields.push(Field(vs));
                 }
                 if fields.len() != 0 {
-                    let mut fs = std::mem::replace(&mut fields, vec![]);
+                    let fs = std::mem::replace(&mut fields, vec![]);
                     records.push(Record(fs));
                 }
                 break;
@@ -69,12 +75,27 @@ pub fn parse_records(input : &mut impl Iterator<Item = char>, options : &Options
     Ok(records)
 }
 
-fn parse_number(input : &mut impl Iterator<Item = char>) -> Value {
-    Value::Number(input.take_while(|x| x.is_numeric()).collect())
+fn take_while(input : &mut Peekable<impl Iterator<Item = char>>, mut p : impl FnMut(char) -> bool) -> String {
+    let mut cs = vec![];
+
+    while let Some(c) = input.peek() {
+        if p(*c) {
+            cs.push(input.next().unwrap());
+        }
+        else {
+            break;
+        }
+    }
+
+    cs.into_iter().collect()
 }
 
-fn parse_symbol(input : &mut impl Iterator<Item = char>) -> Value {
-    Value::Symbol(input.take_while(|x| x.is_alphanumeric() || *x == '_').collect())
+fn parse_number(input : &mut Peekable<impl Iterator<Item = char>>) -> Value {
+    Value::Number(take_while(input, |x| x.is_numeric()))
+}
+
+fn parse_symbol(input : &mut Peekable<impl Iterator<Item = char>>) -> Value {
+    Value::Symbol(take_while(input, |x| x.is_alphanumeric() || x == '_'))
 }
 
 fn parse_string( input : &mut impl Iterator<Item = char> 
@@ -106,18 +127,89 @@ mod test {
     use super::*;
 
     // TODO
-    // single line records with blank lines
     // multi line records
     // multiple blank lines
     // space elements
     //  end of stream without record div
     // end of stream with record div
+    // no strings
+    // allow space and multi line records with multiple blank lines
+
+    fn num(input : u32) -> Value {
+        Value::Number(format!("{}", input))
+    }
+
+    #[test]
+    fn parse_records_should_parse_multi_line_records() {
+        let mut input = "1 2\n3 4\n\n5 6\n7 8\n\n".chars();
+        let output = parse_records(&mut input, &Options::default().multi_line_records().field_dividers(&['\n'])).unwrap();
+
+        assert_eq!(output.len(), 2);
+        assert_eq!(output[0].0.len(), 2);
+        assert_eq!(output[0].0[0].0.len(), 2);
+        assert_eq!(output[0].0[0].0[0], num(1));
+        assert_eq!(output[0].0[0].0[1], num(2));
+
+        assert_eq!(output[0].0[1].0.len(), 2);
+        assert_eq!(output[0].0[1].0[0], num(3));
+        assert_eq!(output[0].0[1].0[1], num(4));
+
+        assert_eq!(output[1].0.len(), 2);
+        assert_eq!(output[1].0[0].0.len(), 2);
+        assert_eq!(output[1].0[0].0[0], num(5));
+        assert_eq!(output[1].0[0].0[1], num(6));
+
+        assert_eq!(output[1].0[1].0.len(), 2);
+        assert_eq!(output[1].0[1].0[0], num(7));
+        assert_eq!(output[1].0[1].0[1], num(8));
+    }
 
     #[test]
     fn parse_records_should_parse_single_line_records() {
         let mut input = "1,2,3\n4,5,6".chars();
         let output = parse_records(&mut input, &Options::default().single_line_records()).unwrap();
+
         assert_eq!(output.len(), 2);
+        assert_eq!(output[0].0.len(), 3);
+        assert_eq!(output[0].0[0].0.len(), 1);
+        assert_eq!(output[0].0[0].0[0], num(1));
+        assert_eq!(output[0].0[1].0.len(), 1);
+        assert_eq!(output[0].0[1].0[0], num(2));
+        assert_eq!(output[0].0[2].0.len(), 1);
+        assert_eq!(output[0].0[2].0[0], num(3));
+
+        assert_eq!(output[1].0.len(), 3);
+        assert_eq!(output[1].0[0].0.len(), 1);
+        assert_eq!(output[1].0[0].0[0], num(4));
+        assert_eq!(output[1].0[1].0.len(), 1);
+        assert_eq!(output[1].0[1].0[0], num(5));
+        assert_eq!(output[1].0[2].0.len(), 1);
+        assert_eq!(output[1].0[2].0[0], num(6));
+    }
+
+    #[test]
+    fn parse_records_should_parse_single_line_records_with_blank_lines() {
+        let mut input = "1,2,3\n\n4,5,6".chars();
+        let output = parse_records(&mut input, &Options::default().single_line_records()).unwrap();
+
+        assert_eq!(output.len(), 3);
+        assert_eq!(output[0].0.len(), 3);
+        assert_eq!(output[0].0[0].0.len(), 1);
+        assert_eq!(output[0].0[0].0[0], num(1));
+        assert_eq!(output[0].0[1].0.len(), 1);
+        assert_eq!(output[0].0[1].0[0], num(2));
+        assert_eq!(output[0].0[2].0.len(), 1);
+        assert_eq!(output[0].0[2].0[0], num(3));
+
+        assert_eq!(output[1].0.len(), 0);
+
+        assert_eq!(output[2].0.len(), 3);
+        assert_eq!(output[2].0[0].0.len(), 1);
+        assert_eq!(output[2].0[0].0[0], num(4));
+        assert_eq!(output[2].0[1].0.len(), 1);
+        assert_eq!(output[2].0[1].0[0], num(5));
+        assert_eq!(output[2].0[2].0.len(), 1);
+        assert_eq!(output[2].0[2].0[0], num(6));
     }
 
     #[test]

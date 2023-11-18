@@ -87,6 +87,11 @@ impl Options {
         self.strings = Some(QuoteOpt { escape_char: Some(escape_char), quote_chars: quotes.to_vec() });
         self
     }
+
+    pub fn disallow_strings(mut self) -> Self {
+        self.strings = None;
+        self
+    }
 }
 
 // TODO make sure that the constructors enforce:
