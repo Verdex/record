@@ -134,21 +134,45 @@ fn field(values : Vec<Value>) -> Field {
 mod test {
     use super::*;
 
-    // TODO
-    // space elements
-    // no strings
-    // allow space and multi line records with multiple blank lines
-
     fn num(input : u32) -> Value {
         Value::Number(format!("{}", input))
+    }
+
+    #[test]
+    fn parse_records_should_parse_multi_line_records_with_space() {
+        let mut input = "1 2\n3 4\n\n\n5 6\n7 8".chars();
+        let output = parse_records(&mut input, &Options::default().multi_line_records().field_dividers(&['\n']).preserve_spacing(true)).unwrap();
+
+        assert_eq!(output.len(), 3);
+        assert_eq!(output[0].fields.len(), 2);
+        assert_eq!(output[0].fields[0].values.len(), 3);
+        assert_eq!(output[0].fields[0].values[0], num(1));
+        assert_eq!(output[0].fields[0].values[1], Value::Space(' '));
+        assert_eq!(output[0].fields[0].values[2], num(2));
+
+        assert_eq!(output[0].fields[1].values.len(), 3);
+        assert_eq!(output[0].fields[1].values[0], num(3));
+        assert_eq!(output[0].fields[1].values[1], Value::Space(' '));
+        assert_eq!(output[0].fields[1].values[2], num(4));
+
+        assert_eq!(output[1].fields.len(), 0);
+
+        assert_eq!(output[2].fields.len(), 2);
+        assert_eq!(output[2].fields[0].values.len(), 3);
+        assert_eq!(output[2].fields[0].values[0], num(5));
+        assert_eq!(output[2].fields[0].values[1], Value::Space(' '));
+        assert_eq!(output[2].fields[0].values[2], num(6));
+
+        assert_eq!(output[2].fields[1].values.len(), 3);
+        assert_eq!(output[2].fields[1].values[0], num(7));
+        assert_eq!(output[2].fields[1].values[1], Value::Space(' '));
+        assert_eq!(output[2].fields[1].values[2], num(8));
     }
 
     #[test]
     fn parse_records_should_parse_multi_line_records_with_multi_blank_lines() {
         let mut input = "1 2\n3 4\n\n\n5 6\n7 8".chars();
         let output = parse_records(&mut input, &Options::default().multi_line_records().field_dividers(&['\n'])).unwrap();
-
-        println!("{:?}", output);
 
         assert_eq!(output.len(), 3);
         assert_eq!(output[0].fields.len(), 2);
