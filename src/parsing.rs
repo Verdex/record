@@ -31,17 +31,6 @@ pub fn parse_records(input : &mut impl Iterator<Item = char>, options : &Options
             }
         }
         match p {
-            None => {
-                if values.len() != 0 {
-                    let mut vs = std::mem::replace(&mut values, vec![]);
-                    fields.push(Field(vs));
-                }
-                if fields.len() != 0 {
-                    let mut fs = std::mem::replace(&mut fields, vec![]);
-                    records.push(Record(fs));
-                }
-                break;
-            },
             Some(x) if options.record.record_div == Div::EndLine && *x == options.endline => { 
                 if values.len() != 0 {
                     let mut vs = std::mem::replace(&mut values, vec![]);
@@ -63,6 +52,17 @@ pub fn parse_records(input : &mut impl Iterator<Item = char>, options : &Options
                     QuoteOpt { escape_char: Some(escape_char), quote_chars } => { values.push(parse_string(&mut input, |x| x == *escape_char, |x| quote_chars.contains(&x))?); },
                 },
             Some(x) => { values.push(Value::Punct(*x)); },
+            None => {
+                if values.len() != 0 {
+                    let mut vs = std::mem::replace(&mut values, vec![]);
+                    fields.push(Field(vs));
+                }
+                if fields.len() != 0 {
+                    let mut fs = std::mem::replace(&mut fields, vec![]);
+                    records.push(Record(fs));
+                }
+                break;
+            },
         }
     }
 
@@ -116,28 +116,29 @@ mod test {
     #[test]
     fn parse_records_should_parse_single_line_records() {
         let mut input = "1,2,3\n4,5,6".chars();
-        let output = parse_records(&mut input, Options { });
+        let output = parse_records(&mut input, &Options::default().single_line_records()).unwrap();
+        assert_eq!(output.len(), 2);
     }
 
     #[test]
     fn parse_string_should_parse_string() {
         let mut input = "'string another'".chars();
         let output = parse_string(&mut input, |_| false, |x| x == '\'').unwrap();
-        assert_eq!(output, "string another");
+        assert_eq!(output, Value::String("string another".into()));
     }
 
     #[test]
     fn parse_string_should_escape() {
         let mut input = "'string \\\\ \\' another'".chars();
         let output = parse_string(&mut input, |x| x == '\\', |x| x == '\'').unwrap();
-        assert_eq!(output, "string \\ ' another");
+        assert_eq!(output, Value::String("string \\ ' another".into()));
     }
 
     #[test]
     fn parse_should_should_drop_escape_for_other() {
         let mut input = "'string \\x another'".chars();
         let output = parse_string(&mut input, |x| x == '\\', |x| x == '\'').unwrap();
-        assert_eq!(output, "string \\x another");
+        assert_eq!(output, Value::String("string \\x another".into()));
     }
 
 }

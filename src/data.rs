@@ -27,10 +27,10 @@ pub struct Options {
     pub endline : char,
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub struct Record(pub Vec<Field>);
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub struct Field(pub Vec<Value>);
 
 #[derive(Debug, PartialEq)]
@@ -89,7 +89,6 @@ impl Options {
     }
 }
 
-// TODO constructors for options
 // TODO make sure that the constructors enforce:
 //  * non-conflicting options (for example, string shouldn't conflict with divs and divs shouldn't conflict with each other, etc)
 
