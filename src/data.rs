@@ -28,10 +28,14 @@ pub struct Options {
 }
 
 #[derive(Debug, PartialEq)]
-pub struct Record(pub Vec<Field>);
+pub struct Record {
+    pub fields : Vec<Field>,
+}
 
 #[derive(Debug, PartialEq)]
-pub struct Field(pub Vec<Value>);
+pub struct Field {
+    pub values : Vec<Value>,
+}
 
 #[derive(Debug, PartialEq)]
 pub enum Value {
