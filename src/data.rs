@@ -26,17 +26,13 @@ pub struct Options {
     pub(crate) endline : char,
 }
 
-#[derive(Debug, PartialEq)]
-pub struct Record {
-    pub fields : Vec<Field>,
+#[derive(Debug, PartialEq, Clone)]
+pub enum Entry {
+    Record(Vec<Entry>),
+    Field(Vec<Value>),
 }
 
-#[derive(Debug, PartialEq)]
-pub struct Field {
-    pub values : Vec<Value>,
-}
-
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub enum Value {
     String(String),
     Symbol(String),

@@ -3,12 +3,12 @@ use std::iter::Peekable;
 
 use crate::data::*;
 
-pub fn parse_records(input : &mut impl Iterator<Item = char>, options : &Options) -> Result<Vec<Record>, String> {
+pub fn parse_records(input : &mut impl Iterator<Item = char>, options : &Options) -> Result<Entry, String> {
     let mut input = input.peekable();
 
-    let mut records : Vec<Record> = vec![];
-    let mut fields : Vec<Field> = vec![];
-    let mut values : Vec<Value> = vec![];
+    let mut records = vec![];
+    let mut fields = vec![];
+    let mut values = vec![];
 
     let mut last_was_endline = false;
 
@@ -18,10 +18,10 @@ pub fn parse_records(input : &mut impl Iterator<Item = char>, options : &Options
             if last_was_endline && p == Some(&options.endline) {
                 if values.len() != 0 {
                     let vs = std::mem::replace(&mut values, vec![]);
-                    fields.push(field(vs));
+                    fields.push(Entry::Field(vs));
                 }
                 let fs = std::mem::replace(&mut fields, vec![]);
-                records.push(record(fs));
+                records.push(Entry::Record(fs));
                 input.next();
                 continue;
             }
@@ -36,15 +36,15 @@ pub fn parse_records(input : &mut impl Iterator<Item = char>, options : &Options
             Some(x) if options.record.record_div == Div::EndLine && *x == options.endline => { 
                 if values.len() != 0 {
                     let vs = std::mem::replace(&mut values, vec![]);
-                    fields.push(field(vs));
+                    fields.push(Entry::Field(vs));
                 }
                 let fs = std::mem::replace(&mut fields, vec![]);
-                records.push(record(fs));
+                records.push(Entry::Record(fs));
                 input.next();
             },
             Some(x) if options.record.field_div.contains(&x) => { 
                 let vs = std::mem::replace(&mut values, vec![]);
-                fields.push(field(vs));
+                fields.push(Entry::Field(vs));
                 input.next();
             },
             Some(x) if options.preserve_spacing && x.is_whitespace() => { values.push(Value::Space(*x)); input.next(); },
@@ -60,18 +60,18 @@ pub fn parse_records(input : &mut impl Iterator<Item = char>, options : &Options
             None => {
                 if values.len() != 0 {
                     let vs = std::mem::replace(&mut values, vec![]);
-                    fields.push(field(vs));
+                    fields.push(Entry::Field(vs));
                 }
                 if fields.len() != 0 {
                     let fs = std::mem::replace(&mut fields, vec![]);
-                    records.push(record(fs));
+                    records.push(Entry::Record(fs));
                 }
                 break;
             },
         }
     }
 
-    Ok(records)
+    Ok(Entry::Record(records))
 }
 
 fn take_while(input : &mut Peekable<impl Iterator<Item = char>>, mut p : impl FnMut(char) -> bool) -> String {
@@ -119,14 +119,6 @@ fn parse_string( input : &mut impl Iterator<Item = char>
     }
 
     Ok(Value::String(ret.into_iter().collect()))
-}
-
-fn record(fields : Vec<Field>) -> Record {
-    Record { fields }
-}
-
-fn field(values : Vec<Value>) -> Field {
-    Field { values }
 }
 
 #[cfg(test)]
