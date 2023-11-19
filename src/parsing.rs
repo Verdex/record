@@ -398,22 +398,27 @@ mod test {
         let mut input = "1,2,3\n4,5,6".chars();
         let output = parse_records(&mut input, &Options::default().single_line_records()).unwrap();
 
-        assert_eq!(output.len(), 2);
-        assert_eq!(output[0].fields.len(), 3);
-        assert_eq!(output[0].fields[0].values.len(), 1);
-        assert_eq!(output[0].fields[0].values[0], num(1));
-        assert_eq!(output[0].fields[1].values.len(), 1);
-        assert_eq!(output[0].fields[1].values[0], num(2));
-        assert_eq!(output[0].fields[2].values.len(), 1);
-        assert_eq!(output[0].fields[2].values[0], num(3));
+        let record_pattern = plist_path(vec![
+                                precord(pexact_list(vec![ pfield(pexact_list(vec![Pattern::CaptureVar("a".into())]))
+                                                        , pfield(pexact_list(vec![Pattern::CaptureVar("b".into())]))
+                                                        , pfield(pexact_list(vec![Pattern::CaptureVar("c".into())]))
+                                                        ]))]);
 
-        assert_eq!(output[1].fields.len(), 3);
-        assert_eq!(output[1].fields[0].values.len(), 1);
-        assert_eq!(output[1].fields[0].values[0], num(4));
-        assert_eq!(output[1].fields[1].values.len(), 1);
-        assert_eq!(output[1].fields[1].values[0], num(5));
-        assert_eq!(output[1].fields[2].values.len(), 1);
-        assert_eq!(output[1].fields[2].values[0], num(6));
+        let records = m(record_pattern, &output);
+
+        assert_eq!(records.len(), 2);
+
+        assert_eq!(records[0].get("a").unwrap(), &&Entry::Value(num(1)));
+        assert_eq!(records[0].get("b").unwrap(), &&Entry::Value(num(2)));
+        assert_eq!(records[0].get("c").unwrap(), &&Entry::Value(num(3)));
+
+        assert_eq!(records[1].get("a").unwrap(), &&Entry::Value(num(4)));
+        assert_eq!(records[1].get("b").unwrap(), &&Entry::Value(num(5)));
+        assert_eq!(records[1].get("c").unwrap(), &&Entry::Value(num(6)));
+
+        // Empty Record
+        let empty_records = m(p_empty_record(), &output);
+        assert_eq!(empty_records.len(), 0);
     }
 
     #[test]
@@ -421,45 +426,48 @@ mod test {
         let mut input = "1,2,3\n\n4,5,6".chars();
         let output = parse_records(&mut input, &Options::default().single_line_records()).unwrap();
 
-        assert_eq!(output.len(), 3);
-        assert_eq!(output[0].fields.len(), 3);
-        assert_eq!(output[0].fields[0].values.len(), 1);
-        assert_eq!(output[0].fields[0].values[0], num(1));
-        assert_eq!(output[0].fields[1].values.len(), 1);
-        assert_eq!(output[0].fields[1].values[0], num(2));
-        assert_eq!(output[0].fields[2].values.len(), 1);
-        assert_eq!(output[0].fields[2].values[0], num(3));
+        let record_pattern = plist_path(vec![
+                                precord(pexact_list(vec![ pfield(pexact_list(vec![Pattern::CaptureVar("a".into())]))
+                                                        , pfield(pexact_list(vec![Pattern::CaptureVar("b".into())]))
+                                                        , pfield(pexact_list(vec![Pattern::CaptureVar("c".into())]))
+                                                        ]))]);
 
-        assert_eq!(output[1].fields.len(), 0);
+        let records = m(record_pattern, &output);
 
-        assert_eq!(output[2].fields.len(), 3);
-        assert_eq!(output[2].fields[0].values.len(), 1);
-        assert_eq!(output[2].fields[0].values[0], num(4));
-        assert_eq!(output[2].fields[1].values.len(), 1);
-        assert_eq!(output[2].fields[1].values[0], num(5));
-        assert_eq!(output[2].fields[2].values.len(), 1);
-        assert_eq!(output[2].fields[2].values[0], num(6));
+        assert_eq!(records.len(), 2);
+
+        assert_eq!(records[0].get("a").unwrap(), &&Entry::Value(num(1)));
+        assert_eq!(records[0].get("b").unwrap(), &&Entry::Value(num(2)));
+        assert_eq!(records[0].get("c").unwrap(), &&Entry::Value(num(3)));
+
+        assert_eq!(records[1].get("a").unwrap(), &&Entry::Value(num(4)));
+        assert_eq!(records[1].get("b").unwrap(), &&Entry::Value(num(5)));
+        assert_eq!(records[1].get("c").unwrap(), &&Entry::Value(num(6)));
+
+        // Empty Record
+        let empty_records = m(p_empty_record(), &output);
+        assert_eq!(empty_records.len(), 1);
     }
 
     #[test]
     fn parse_string_should_parse_string() {
         let mut input = "'string another'".chars();
         let output = parse_string(&mut input, |_| false, |x| x == '\'').unwrap();
-        assert_eq!(output, Value::String("string another".into()));
+        assert_eq!(output, Entry::Value(Value::String("string another".into())));
     }
 
     #[test]
     fn parse_string_should_escape() {
         let mut input = "'string \\\\ \\' another'".chars();
         let output = parse_string(&mut input, |x| x == '\\', |x| x == '\'').unwrap();
-        assert_eq!(output, Value::String("string \\ ' another".into()));
+        assert_eq!(output, Entry::Value(Value::String("string \\ ' another".into())));
     }
 
     #[test]
     fn parse_should_should_drop_escape_for_other() {
         let mut input = "'string \\x another'".chars();
         let output = parse_string(&mut input, |x| x == '\\', |x| x == '\'').unwrap();
-        assert_eq!(output, Value::String("string \\x another".into()));
+        assert_eq!(output, Entry::Value(Value::String("string \\x another".into())));
     }
 
 }
