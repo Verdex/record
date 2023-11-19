@@ -30,6 +30,7 @@ pub struct Options {
 #[derive(Debug, PartialEq, Clone)]
 pub enum Entry {
     Record(Vec<Entry>),
+    List(Vec<Entry>),
     Field(Vec<Entry>),
     Value(Value),
 }
@@ -101,6 +102,7 @@ impl Matchable for Entry {
 
     fn kind(&self) -> MatchKind<Self> {
         match self {
+            Entry::List(ls) => MatchKind::List(ls),
             Entry::Record(xs) => MatchKind::Cons("Record".into(), xs),
             Entry::Field(values) => MatchKind::Cons("Field".into(), values),
             Entry::Value(value) => MatchKind::Atom(value),
@@ -112,6 +114,7 @@ impl Matchable for Entry {
             Entry::Record(xs) => Pattern::Cons { name: "Record".into(), params: xs.iter().map(|x| x.to_pattern()).collect() },
             Entry::Field(values) => Pattern::Cons { name: "Field".into(), params: values.iter().map(|x| x.to_pattern()).collect() },
             Entry::Value(value) => Pattern::Atom(value.clone()),
+            Entry::List(l) => Pattern::ExactList(l.iter().map(|x| x.to_pattern()).collect()),
         }
     }
 }
