@@ -173,8 +173,6 @@ mod test {
         let mut input = "1 2\n3 4\n\n\n5 6\n7 8".chars();
         let output = parse_records(&mut input, &Options::default().multi_line_records().field_dividers(&['\n']).preserve_spacing(true)).unwrap();
 
-        println!("{:?}", output);
-
         let filled_pattern = plist_path(
             vec![precord(
                 pexact_list(vec![Pattern::CaptureVar("line_one".into()), Pattern::CaptureVar("line_two".into())]))]);
@@ -235,26 +233,54 @@ mod test {
         let mut input = "1 2\n3 4\n\n\n5 6\n7 8".chars();
         let output = parse_records(&mut input, &Options::default().multi_line_records().field_dividers(&['\n'])).unwrap();
 
-        assert_eq!(output.len(), 3);
-        assert_eq!(output[0].fields.len(), 2);
-        assert_eq!(output[0].fields[0].values.len(), 2);
-        assert_eq!(output[0].fields[0].values[0], num(1));
-        assert_eq!(output[0].fields[0].values[1], num(2));
+        let filled_pattern = plist_path(
+            vec![precord(
+                pexact_list(vec![Pattern::CaptureVar("line_one".into()), Pattern::CaptureVar("line_two".into())]))]);
+        let filled_records = m(filled_pattern, &output);
 
-        assert_eq!(output[0].fields[1].values.len(), 2);
-        assert_eq!(output[0].fields[1].values[0], num(3));
-        assert_eq!(output[0].fields[1].values[1], num(4));
+        assert_eq!(filled_records.len(), 2);
 
-        assert_eq!(output[1].fields.len(), 0);
+        let filled_internal_pattern = pfield(pexact_list(vec![ Pattern::CaptureVar("a".into())
+                                                             , Pattern::CaptureVar("b".into())
+                                                             ]));
 
-        assert_eq!(output[2].fields.len(), 2);
-        assert_eq!(output[2].fields[0].values.len(), 2);
-        assert_eq!(output[2].fields[0].values[0], num(5));
-        assert_eq!(output[2].fields[0].values[1], num(6));
+        // Filled record 1
+        let filled = filled_records[0].get("line_one").unwrap();
 
-        assert_eq!(output[2].fields[1].values.len(), 2);
-        assert_eq!(output[2].fields[1].values[0], num(7));
-        assert_eq!(output[2].fields[1].values[1], num(8));
+        let filled_results = m(filled_internal_pattern.clone(), filled);
+
+        assert_eq!(filled_results.len(), 1);
+        assert_eq!(filled_results[0].get("a").unwrap(), &&Entry::Value(num(1)));
+        assert_eq!(filled_results[0].get("b").unwrap(), &&Entry::Value(num(2)));
+
+        let filled = filled_records[0].get("line_two").unwrap();
+
+        let filled_results = m(filled_internal_pattern.clone(), filled);
+
+        assert_eq!(filled_results.len(), 1);
+        assert_eq!(filled_results[0].get("a").unwrap(), &&Entry::Value(num(3)));
+        assert_eq!(filled_results[0].get("b").unwrap(), &&Entry::Value(num(4)));
+
+        // Filled record 2
+        let filled = filled_records[1].get("line_one").unwrap();
+
+        let filled_results = m(filled_internal_pattern.clone(), filled);
+
+        assert_eq!(filled_results.len(), 1);
+        assert_eq!(filled_results[0].get("a").unwrap(), &&Entry::Value(num(5)));
+        assert_eq!(filled_results[0].get("b").unwrap(), &&Entry::Value(num(6)));
+
+        let filled = filled_records[1].get("line_two").unwrap();
+
+        let filled_results = m(filled_internal_pattern, filled);
+
+        assert_eq!(filled_results.len(), 1);
+        assert_eq!(filled_results[0].get("a").unwrap(), &&Entry::Value(num(7)));
+        assert_eq!(filled_results[0].get("b").unwrap(), &&Entry::Value(num(8)));
+
+        // Empty Record
+        let empty_records = m(p_empty_record(), &output);
+        assert_eq!(empty_records.len(), 1);
     }
 
     #[test]
@@ -262,24 +288,54 @@ mod test {
         let mut input = "1 2\n3 4\n\n5 6\n7 8".chars();
         let output = parse_records(&mut input, &Options::default().multi_line_records().field_dividers(&['\n'])).unwrap();
 
-        assert_eq!(output.len(), 2);
-        assert_eq!(output[0].fields.len(), 2);
-        assert_eq!(output[0].fields[0].values.len(), 2);
-        assert_eq!(output[0].fields[0].values[0], num(1));
-        assert_eq!(output[0].fields[0].values[1], num(2));
+        let filled_pattern = plist_path(
+            vec![precord(
+                pexact_list(vec![Pattern::CaptureVar("line_one".into()), Pattern::CaptureVar("line_two".into())]))]);
+        let filled_records = m(filled_pattern, &output);
 
-        assert_eq!(output[0].fields[1].values.len(), 2);
-        assert_eq!(output[0].fields[1].values[0], num(3));
-        assert_eq!(output[0].fields[1].values[1], num(4));
+        assert_eq!(filled_records.len(), 2);
 
-        assert_eq!(output[1].fields.len(), 2);
-        assert_eq!(output[1].fields[0].values.len(), 2);
-        assert_eq!(output[1].fields[0].values[0], num(5));
-        assert_eq!(output[1].fields[0].values[1], num(6));
+        let filled_internal_pattern = pfield(pexact_list(vec![ Pattern::CaptureVar("a".into())
+                                                             , Pattern::CaptureVar("b".into())
+                                                             ]));
 
-        assert_eq!(output[1].fields[1].values.len(), 2);
-        assert_eq!(output[1].fields[1].values[0], num(7));
-        assert_eq!(output[1].fields[1].values[1], num(8));
+        // Filled record 1
+        let filled = filled_records[0].get("line_one").unwrap();
+
+        let filled_results = m(filled_internal_pattern.clone(), filled);
+
+        assert_eq!(filled_results.len(), 1);
+        assert_eq!(filled_results[0].get("a").unwrap(), &&Entry::Value(num(1)));
+        assert_eq!(filled_results[0].get("b").unwrap(), &&Entry::Value(num(2)));
+
+        let filled = filled_records[0].get("line_two").unwrap();
+
+        let filled_results = m(filled_internal_pattern.clone(), filled);
+
+        assert_eq!(filled_results.len(), 1);
+        assert_eq!(filled_results[0].get("a").unwrap(), &&Entry::Value(num(3)));
+        assert_eq!(filled_results[0].get("b").unwrap(), &&Entry::Value(num(4)));
+
+        // Filled record 2
+        let filled = filled_records[1].get("line_one").unwrap();
+
+        let filled_results = m(filled_internal_pattern.clone(), filled);
+
+        assert_eq!(filled_results.len(), 1);
+        assert_eq!(filled_results[0].get("a").unwrap(), &&Entry::Value(num(5)));
+        assert_eq!(filled_results[0].get("b").unwrap(), &&Entry::Value(num(6)));
+
+        let filled = filled_records[1].get("line_two").unwrap();
+
+        let filled_results = m(filled_internal_pattern, filled);
+
+        assert_eq!(filled_results.len(), 1);
+        assert_eq!(filled_results[0].get("a").unwrap(), &&Entry::Value(num(7)));
+        assert_eq!(filled_results[0].get("b").unwrap(), &&Entry::Value(num(8)));
+
+        // Empty Record
+        let empty_records = m(p_empty_record(), &output);
+        assert_eq!(empty_records.len(), 0);
     }
 
     #[test]
@@ -287,24 +343,54 @@ mod test {
         let mut input = "1 2\n3 4\n\n5 6\n7 8\n\n".chars();
         let output = parse_records(&mut input, &Options::default().multi_line_records().field_dividers(&['\n'])).unwrap();
 
-        assert_eq!(output.len(), 2);
-        assert_eq!(output[0].fields.len(), 2);
-        assert_eq!(output[0].fields[0].values.len(), 2);
-        assert_eq!(output[0].fields[0].values[0], num(1));
-        assert_eq!(output[0].fields[0].values[1], num(2));
+        let filled_pattern = plist_path(
+            vec![precord(
+                pexact_list(vec![Pattern::CaptureVar("line_one".into()), Pattern::CaptureVar("line_two".into())]))]);
+        let filled_records = m(filled_pattern, &output);
 
-        assert_eq!(output[0].fields[1].values.len(), 2);
-        assert_eq!(output[0].fields[1].values[0], num(3));
-        assert_eq!(output[0].fields[1].values[1], num(4));
+        assert_eq!(filled_records.len(), 2);
 
-        assert_eq!(output[1].fields.len(), 2);
-        assert_eq!(output[1].fields[0].values.len(), 2);
-        assert_eq!(output[1].fields[0].values[0], num(5));
-        assert_eq!(output[1].fields[0].values[1], num(6));
+        let filled_internal_pattern = pfield(pexact_list(vec![ Pattern::CaptureVar("a".into())
+                                                             , Pattern::CaptureVar("b".into())
+                                                             ]));
 
-        assert_eq!(output[1].fields[1].values.len(), 2);
-        assert_eq!(output[1].fields[1].values[0], num(7));
-        assert_eq!(output[1].fields[1].values[1], num(8));
+        // Filled record 1
+        let filled = filled_records[0].get("line_one").unwrap();
+
+        let filled_results = m(filled_internal_pattern.clone(), filled);
+
+        assert_eq!(filled_results.len(), 1);
+        assert_eq!(filled_results[0].get("a").unwrap(), &&Entry::Value(num(1)));
+        assert_eq!(filled_results[0].get("b").unwrap(), &&Entry::Value(num(2)));
+
+        let filled = filled_records[0].get("line_two").unwrap();
+
+        let filled_results = m(filled_internal_pattern.clone(), filled);
+
+        assert_eq!(filled_results.len(), 1);
+        assert_eq!(filled_results[0].get("a").unwrap(), &&Entry::Value(num(3)));
+        assert_eq!(filled_results[0].get("b").unwrap(), &&Entry::Value(num(4)));
+
+        // Filled record 2
+        let filled = filled_records[1].get("line_one").unwrap();
+
+        let filled_results = m(filled_internal_pattern.clone(), filled);
+
+        assert_eq!(filled_results.len(), 1);
+        assert_eq!(filled_results[0].get("a").unwrap(), &&Entry::Value(num(5)));
+        assert_eq!(filled_results[0].get("b").unwrap(), &&Entry::Value(num(6)));
+
+        let filled = filled_records[1].get("line_two").unwrap();
+
+        let filled_results = m(filled_internal_pattern, filled);
+
+        assert_eq!(filled_results.len(), 1);
+        assert_eq!(filled_results[0].get("a").unwrap(), &&Entry::Value(num(7)));
+        assert_eq!(filled_results[0].get("b").unwrap(), &&Entry::Value(num(8)));
+
+        // Empty Record
+        let empty_records = m(p_empty_record(), &output);
+        assert_eq!(empty_records.len(), 0);
     }
 
     #[test]
