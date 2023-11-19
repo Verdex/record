@@ -29,7 +29,8 @@ pub struct Options {
 #[derive(Debug, PartialEq, Clone)]
 pub enum Entry {
     Record(Vec<Entry>),
-    Field(Vec<Value>),
+    Field(Vec<Entry>),
+    Value(Value),
 }
 
 #[derive(Debug, PartialEq, Clone)]

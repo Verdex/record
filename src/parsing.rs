@@ -47,7 +47,7 @@ pub fn parse_records(input : &mut impl Iterator<Item = char>, options : &Options
                 fields.push(Entry::Field(vs));
                 input.next();
             },
-            Some(x) if options.preserve_spacing && x.is_whitespace() => { values.push(Value::Space(*x)); input.next(); },
+            Some(x) if options.preserve_spacing && x.is_whitespace() => { values.push(Entry::Value(Value::Space(*x))); input.next(); },
             Some(x) if x.is_whitespace() => { input.next(); },
             Some(x) if x.is_numeric() => { values.push(parse_number(&mut input)); },
             Some(x) if x.is_alphabetic() || *x == '_' => { values.push(parse_symbol(&mut input)); },
@@ -56,7 +56,7 @@ pub fn parse_records(input : &mut impl Iterator<Item = char>, options : &Options
                     QuoteOpt { escape_char: None, quote_chars } => { values.push(parse_string(&mut input, |_| false, |x| quote_chars.contains(&x))?); },
                     QuoteOpt { escape_char: Some(escape_char), quote_chars } => { values.push(parse_string(&mut input, |x| x == *escape_char, |x| quote_chars.contains(&x))?); },
                 },
-            Some(x) => { values.push(Value::Punct(*x)); input.next(); },
+            Some(x) => { values.push(Entry::Value(Value::Punct(*x))); input.next(); },
             None => {
                 if values.len() != 0 {
                     let vs = std::mem::replace(&mut values, vec![]);
@@ -89,18 +89,18 @@ fn take_while(input : &mut Peekable<impl Iterator<Item = char>>, mut p : impl Fn
     cs.into_iter().collect()
 }
 
-fn parse_number(input : &mut Peekable<impl Iterator<Item = char>>) -> Value {
-    Value::Number(take_while(input, |x| x.is_numeric()))
+fn parse_number(input : &mut Peekable<impl Iterator<Item = char>>) -> Entry {
+    Entry::Value(Value::Number(take_while(input, |x| x.is_numeric())))
 }
 
-fn parse_symbol(input : &mut Peekable<impl Iterator<Item = char>>) -> Value {
-    Value::Symbol(take_while(input, |x| x.is_alphanumeric() || x == '_'))
+fn parse_symbol(input : &mut Peekable<impl Iterator<Item = char>>) -> Entry {
+    Entry::Value(Value::Symbol(take_while(input, |x| x.is_alphanumeric() || x == '_')))
 }
 
 fn parse_string( input : &mut impl Iterator<Item = char> 
                , mut is_escape : impl FnMut(char) -> bool
                , mut is_end : impl FnMut(char) -> bool) 
-               -> Result<Value, String> {
+               -> Result<Entry, String> {
 
     input.next(); // Get rid of initial quote
    
@@ -118,7 +118,7 @@ fn parse_string( input : &mut impl Iterator<Item = char>
         }
     }
 
-    Ok(Value::String(ret.into_iter().collect()))
+    Ok(Entry::Value(Value::String(ret.into_iter().collect())))
 }
 
 #[cfg(test)]
