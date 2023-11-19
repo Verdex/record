@@ -133,8 +133,39 @@ fn parse_string( input : &mut impl Iterator<Item = char>
 mod test {
     use super::*;
 
+    use std::collections::HashMap;
+
+    use structuralize::pattern::check::*;
+    use structuralize::pattern::data::*;
+    use structuralize::pattern::matcher::*;
+
     fn num(input : u32) -> Value {
         Value::Number(format!("{}", input))
+    }
+
+    fn precord(p : Pattern<Value>) -> Pattern<Value> {
+        Pattern::Cons { name: "Record".into(), params: vec![p] }
+    }
+
+    fn pfield(p : Pattern<Value>) -> Pattern<Value> {
+        Pattern::Cons { name: "Field".into(), params: vec![p] }
+    }
+
+    fn pexact_list(ps : Vec<Pattern<Value>>) -> Pattern<Value> {
+        Pattern::ExactList(ps)
+    }
+
+    fn plist_path(ps : Vec<Pattern<Value>>) -> Pattern<Value> {
+        Pattern::ListPath(ps)
+    }
+
+    fn m<'a>(p : Pattern<Value>, d : &'a Entry) -> Vec<HashMap<Box<str>, &'a Entry>> {
+        let tc = check_pattern(p).unwrap();
+        pattern_match(&tc, d).map(|x| x.into_iter().collect::<HashMap<_, _>>()).collect::<Vec<_>>()
+    }
+
+    fn p_empty_record() -> Pattern<Value> {
+            plist_path(vec![precord(pexact_list(vec![]))])
     }
 
     #[test]
@@ -142,30 +173,61 @@ mod test {
         let mut input = "1 2\n3 4\n\n\n5 6\n7 8".chars();
         let output = parse_records(&mut input, &Options::default().multi_line_records().field_dividers(&['\n']).preserve_spacing(true)).unwrap();
 
-        assert_eq!(output.len(), 3);
-        assert_eq!(output[0].fields.len(), 2);
-        assert_eq!(output[0].fields[0].values.len(), 3);
-        assert_eq!(output[0].fields[0].values[0], num(1));
-        assert_eq!(output[0].fields[0].values[1], Value::Space(' '));
-        assert_eq!(output[0].fields[0].values[2], num(2));
+        println!("{:?}", output);
 
-        assert_eq!(output[0].fields[1].values.len(), 3);
-        assert_eq!(output[0].fields[1].values[0], num(3));
-        assert_eq!(output[0].fields[1].values[1], Value::Space(' '));
-        assert_eq!(output[0].fields[1].values[2], num(4));
+        let filled_pattern = plist_path(
+            vec![precord(
+                pexact_list(vec![Pattern::CaptureVar("line_one".into()), Pattern::CaptureVar("line_two".into())]))]);
+        let filled_records = m(filled_pattern, &output);
 
-        assert_eq!(output[1].fields.len(), 0);
+        assert_eq!(filled_records.len(), 2);
 
-        assert_eq!(output[2].fields.len(), 2);
-        assert_eq!(output[2].fields[0].values.len(), 3);
-        assert_eq!(output[2].fields[0].values[0], num(5));
-        assert_eq!(output[2].fields[0].values[1], Value::Space(' '));
-        assert_eq!(output[2].fields[0].values[2], num(6));
+        let filled_internal_pattern = pfield(pexact_list(vec![ Pattern::CaptureVar("a".into())
+                                                             , Pattern::CaptureVar("b".into())
+                                                             , Pattern::CaptureVar("c".into())
+                                                             ]));
 
-        assert_eq!(output[2].fields[1].values.len(), 3);
-        assert_eq!(output[2].fields[1].values[0], num(7));
-        assert_eq!(output[2].fields[1].values[1], Value::Space(' '));
-        assert_eq!(output[2].fields[1].values[2], num(8));
+        // Filled record 1
+        let filled = filled_records[0].get("line_one").unwrap();
+
+        let filled_results = m(filled_internal_pattern.clone(), filled);
+
+        assert_eq!(filled_results.len(), 1);
+        assert_eq!(filled_results[0].get("a").unwrap(), &&Entry::Value(num(1)));
+        assert_eq!(filled_results[0].get("b").unwrap(), &&Entry::Value(Value::Space(' ')));
+        assert_eq!(filled_results[0].get("c").unwrap(), &&Entry::Value(num(2)));
+
+        let filled = filled_records[0].get("line_two").unwrap();
+
+        let filled_results = m(filled_internal_pattern.clone(), filled);
+
+        assert_eq!(filled_results.len(), 1);
+        assert_eq!(filled_results[0].get("a").unwrap(), &&Entry::Value(num(3)));
+        assert_eq!(filled_results[0].get("b").unwrap(), &&Entry::Value(Value::Space(' ')));
+        assert_eq!(filled_results[0].get("c").unwrap(), &&Entry::Value(num(4)));
+
+        // Filled record 2
+        let filled = filled_records[1].get("line_one").unwrap();
+
+        let filled_results = m(filled_internal_pattern.clone(), filled);
+
+        assert_eq!(filled_results.len(), 1);
+        assert_eq!(filled_results[0].get("a").unwrap(), &&Entry::Value(num(5)));
+        assert_eq!(filled_results[0].get("b").unwrap(), &&Entry::Value(Value::Space(' ')));
+        assert_eq!(filled_results[0].get("c").unwrap(), &&Entry::Value(num(6)));
+
+        let filled = filled_records[1].get("line_two").unwrap();
+
+        let filled_results = m(filled_internal_pattern, filled);
+
+        assert_eq!(filled_results.len(), 1);
+        assert_eq!(filled_results[0].get("a").unwrap(), &&Entry::Value(num(7)));
+        assert_eq!(filled_results[0].get("b").unwrap(), &&Entry::Value(Value::Space(' ')));
+        assert_eq!(filled_results[0].get("c").unwrap(), &&Entry::Value(num(8)));
+
+        // Empty Record
+        let empty_records = m(p_empty_record(), &output);
+        assert_eq!(empty_records.len(), 1);
     }
 
     #[test]
