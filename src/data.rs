@@ -1,4 +1,5 @@
 
+use structuralize::pattern::data::*;
 
 #[derive(Debug)]
 pub(crate) struct QuoteOpt { 
@@ -94,7 +95,23 @@ impl Options {
     }
 }
 
-// TODO make sure that the constructors enforce:
-//  * non-conflicting options (for example, string shouldn't conflict with divs and divs shouldn't conflict with each other, etc)
+impl Matchable for Entry {
+    type Atom = Value;
+    type Object = ();
 
-// TODO matchable implementation for Vec<record> (Iterator<Item = Record> ?)
+    fn kind(&self) -> MatchKind<Self> {
+        match self {
+            Entry::Record(xs) => MatchKind::Cons("Record".into(), xs),
+            Entry::Field(values) => MatchKind::Cons("Field".into(), values),
+            Entry::Value(value) => MatchKind::Atom(value),
+        }
+    }
+
+    fn to_pattern(&self) -> Pattern<Self::Atom> {
+        match self {
+            Entry::Record(xs) => Pattern::Cons { name: "Record".into(), params: xs.iter().map(|x| x.to_pattern()).collect() },
+            Entry::Field(values) => Pattern::Cons { name: "Field".into(), params: values.iter().map(|x| x.to_pattern()).collect() },
+            Entry::Value(value) => Pattern::Atom(value.clone()),
+        }
+    }
+}
