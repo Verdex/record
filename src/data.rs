@@ -35,6 +35,36 @@ pub enum Entry {
     Value(Value),
 }
 
+impl Entry {
+    pub fn from_list<'a>(&'a self) -> Result<&'a [Entry], String> {
+        match self {
+            Entry::List(xs) => Ok(xs),
+            x => Err(format!("Expected Entry::List but found: {:?}", x)),
+        }
+    }
+
+    pub fn from_record<'a>(&'a self) -> Result<&'a [Entry], String> {
+        match self {
+            Entry::Record(xs) => Ok(xs),
+            x => Err(format!("Expected Entry::Record but found: {:?}", x)),
+        }
+    }
+
+    pub fn from_field<'a>(&'a self) -> Result<&'a [Entry], String> {
+        match self {
+            Entry::Field(xs) => Ok(xs),
+            x => Err(format!("Expected Entry::Field but found: {:?}", x)),
+        }
+    }
+
+    pub fn from_value<'a>(&'a self) -> Result<&'a Value, String> {
+        match self {
+            Entry::Value(x) => Ok(x),
+            x => Err(format!("Expected Entry::Value but found: {:?}", x)),
+        }
+    }
+}
+
 #[derive(Debug, PartialEq, Clone)]
 pub enum Value {
     String(String),
